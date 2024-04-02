@@ -22,6 +22,7 @@ class DialogArticle(QtWidgets.QDialog):
         self.ui.cbStatus.addItem('Published')
         self.ui.cbStatus.addItem('Accepted')
         self.ui.cbStatus.addItem('Submitted')
+        self.ui.cbStatus.addItem('Non-peer reviewed')
         self.ui.cbStatus.setCurrentIndex(0)
 
         if article is not None:
@@ -62,7 +63,7 @@ class DialogArticle(QtWidgets.QDialog):
         if origarticle:
             Article.save(id=origarticle.id, **data)
         else:
-            Article.save(**d)
+            Article.save(**data)
 
         return True
 
@@ -107,6 +108,7 @@ class DialogArticle(QtWidgets.QDialog):
         self.ui.tbIssue.setText(article.issue)
         self.ui.tbPages.setText(article.pages)
         self.ui.tbKeywords.setText(article.keywords)
+        self.ui.cbStatus.setCurrentIndex(article.status-1)
 
 
     def validate(self):

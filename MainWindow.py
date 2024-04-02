@@ -109,6 +109,8 @@ class MainWindow(QtWidgets.QMainWindow):
         stats = Article.loadPublicationsToTreeview(self.treeViewModel)
         self.ui.lblTotalPublications.setText(f"{stats['published']+stats['npublished']}")
         self.ui.lblFirstAuthor.setText(f"{stats['nfirst']}")
+        self.ui.lblNRTotalPublications.setText(f"{stats['npeerreviewed']}")
+        self.ui.lblNRFirstAuthor.setText(f"{stats['nfirst_nr']}")
         self.ui.lblInProgress.setText(f"{stats['npublished']}")
 
 

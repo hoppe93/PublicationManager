@@ -22,6 +22,7 @@ class Article(Base):
     STATUS_PUBLISHED = 1
     STATUS_ACCEPTED = 2
     STATUS_SUBMITTED = 3
+    STATUS_NON_REVIEWED = 4
 
 
     # Article ID
@@ -129,6 +130,15 @@ class Article(Base):
         """
         db = config.database()
         return db.exe(select(Article).where(or_(Article.status==Article.STATUS_SUBMITTED, Article.status==Article.STATUS_ACCEPTED)).order_by(Article.date.desc())).scalars().all()
+
+
+    @staticmethod
+    def getNonPeerReviewed():
+        """
+        Get all non-peer reviewed articles.
+        """
+        db = config.database()
+        return db.exe(select(Article).where(Article.status==Article.STATUS_NON_REVIEWED).order_by(Article.date.desc())).scalars().all()
 
 
     @staticmethod
@@ -275,11 +285,13 @@ class Article(Base):
 
         published = Article.getPublished()
         npublishd = Article.getNotPublished()
+        npeerrvwd = Article.getNonPeerReviewed()
 
         root = treeViewModel.invisibleRootItem()
 
         npb = addItem(root, f'In preparation ({len(npublishd)})', 'category')
         pub = addItem(root, f'Published ({len(published)})', 'category')
+        npr = addItem(root, f'Non-peer reviewed ({len(npeerrvwd)})', 'category')
 
         authorname = Setting.get('name').value
 
@@ -323,10 +335,33 @@ class Article(Base):
         if yr is not None:
             yr.setText(yr.text() + f' ({nart})')
 
+        years = []
+        nart = 0
+        nfirst_npr = 0
+        for p in npeerrvwd:
+            if p.date.year not in years:
+                if yr is not None:
+                    yr.setText(yr.text() + f' ({nart})')
+                    nart = 0
+
+                yr = addItem(npr, f'{p.date.year}', 'year')
+                years.append(p.date.year)
+
+            if p.isFirstAuthor(authorname):
+                nfirst_npr += 1
+
+            addItem(yr, p.getName(), 'article-green', p.id)
+            nart += 1
+
+        if yr is not None:
+            yr.setText(yr.text() + f' ({nart})')
+
         return {
             'published': len(published),
             'npublished': len(npublishd),
-            'nfirst': nfirst
+            'npeerreviewed': len(npeerrvwd),
+            'nfirst': nfirst,
+            'nfirst_nr': nfirst_npr
         }
 
 
