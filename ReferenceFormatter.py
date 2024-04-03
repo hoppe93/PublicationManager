@@ -1,5 +1,7 @@
 # Helper class for formatting references
 
+from db import Setting
+
 
 ABBREVIATIONS = {
     'Computer Physics Communications': 'Comput. Phys. Commun.',
@@ -30,17 +32,22 @@ def format(s, article, maxauthors=100, abbrjournal=False, includeperiods=False):
 
     if maxauthors:
         authors = article.authors.split(', ')
+        glbls['nauthors'] = len(authors)
         if len(authors) > maxauthors:
             authorstr = ', '.join(authors[:maxauthors]) + ' et al'
         else:
             authorstr = article.authors
     else:
         authorstr = article.authors
+        glbls['nauthors'] = len(article.authors.split(','))
 
+    firstauthor = Setting.get('name').value
     if not includeperiods:
         authorstr = authorstr.replace('. ', ' ').replace('.', ' ')
+        firstauthor = firstauthor.replace('. ', ' ').replace('.', ' ')
 
     glbls['authors'] = authorstr
+    glbls['firstauthor'] = firstauthor
 
     if abbrjournal:
         if article.journal in ABBREVIATIONS:

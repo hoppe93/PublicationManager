@@ -69,14 +69,19 @@ class DialogExportText(QtWidgets.QDialog):
             code = rf.code
 
         fmt = ''
-        for article in articles:
-            if fmt: fmt += '\n'
-            fmt += ReferenceFormatter.format(
-                code, article,
-                maxauthors=self.ui.sbMaxAuthors.value(),
-                abbrjournal=self.ui.cbAbbrJournal.isChecked(),
-                includeperiods=self.ui.cbPeriodInAuthors.isChecked()
-            )
+        try:
+            for article in articles:
+                if fmt: fmt += '\n'
+                fmt += ReferenceFormatter.format(
+                    code, article,
+                    maxauthors=self.ui.sbMaxAuthors.value(),
+                    abbrjournal=self.ui.cbAbbrJournal.isChecked(),
+                    includeperiods=self.ui.cbPeriodInAuthors.isChecked()
+                )
+        except Exception as ex:
+            msg = f'Exception occurred while formatting references.\n\n{ex}'
+            QMessageBox.critical(self, 'Formatting error', msg)
+            fmt = msg
 
         self.ui.tbReferences.setPlainText(fmt)
 
