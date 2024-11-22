@@ -12,6 +12,8 @@ from pathlib import Path
 from sqlalchemy.sql.expression import insert, select, update
 from . import config
 
+from . import refhelp
+
 
 class Article(Base):
     
@@ -174,19 +176,7 @@ class Article(Base):
         """
         Fetch article details from its DOI number (or URL).
         """
-        if doi[8:] == 'https://':
-            idx = doi[8:].find('/')+8+1
-            doi = doi[idx:]
-
-        r = requests.get(
-            f'https://doi.org/{doi}',
-            headers={
-                'Accept': 'application/vnd.citationstyles.csl+json',
-                'q': '1.0'
-            }
-        )
-
-        js = r.json()
+        js = refhelp.fromDOI(doi)
 
         def ret(key, d=''):
             if key in js:
@@ -207,12 +197,12 @@ class Article(Base):
         elif 'article-number' in js:
             a.pages = ret('article-number')
 
-        if 'created' in js:
-            dt = js['created']['date-parts'][0]
+        if 'published-print' in js:
+            dt = js['published-print']['date-parts'][0]
         elif 'published-online' in js:
             dt = js['published-online']['date-parts'][0]
-        elif 'published-print' in js:
-            dt = js['published-print']['date-parts'][0]
+        elif 'created' in js:
+            dt = js['created']['date-parts'][0]
 
         dt = [f'{x:02d}' for x in dt]
         a.date = '-'.join(dt)

@@ -12,6 +12,7 @@ from db import Article, config, Database, Setting
 
 from DialogArticle import DialogArticle
 from DialogSettings import DialogSettings
+from DialogTopCoauthors import DialogTopCoauthors
 from DialogExportText import DialogExportText
 
 
@@ -51,7 +52,7 @@ class MainWindow(QtWidgets.QMainWindow):
         else:
             filename, _ = QFileDialog.getOpenFileName(
                 parent=self, caption="Open publications database",
-                filter="SQLite database (*.db);;All filer (*.*)"
+                filter="SQLite database (*.db);;All files (*.*)"
             )
 
             if not filename:
@@ -69,6 +70,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ui.actionExit.triggered.connect(self.exit)
         self.ui.actionSettings.triggered.connect(DialogSettings.set)
         self.ui.actionExportText.triggered.connect(DialogExportText.export)
+        self.ui.actionTopCoauthors.triggered.connect(DialogTopCoauthors.exe)
 
         self.ui.btnAddArticle.clicked.connect(self.addEditArticle)
         self.ui.tvPublications.doubleClicked.connect(self.articleDoubleClicked)

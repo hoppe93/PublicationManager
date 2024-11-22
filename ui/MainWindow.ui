@@ -357,8 +357,15 @@
     </widget>
     <addaction name="menuPublication_list"/>
    </widget>
+   <widget class="QMenu" name="menuStatistics">
+    <property name="title">
+     <string>Statistics</string>
+    </property>
+    <addaction name="actionTopCoauthors"/>
+   </widget>
    <addaction name="menuFile"/>
    <addaction name="menuGenerate"/>
+   <addaction name="menuStatistics"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <action name="actionFromDOI">
@@ -384,6 +391,11 @@
   <action name="actionAs_text">
    <property name="text">
     <string>As text...</string>
+   </property>
+  </action>
+  <action name="actionTopCoauthors">
+   <property name="text">
+    <string>Top co-authors</string>
    </property>
   </action>
  </widget>
