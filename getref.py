@@ -23,7 +23,7 @@ def formatBibTeX(article):
     Format a BibTeX reference, given a DOI JSON object.
     """
     authors = article.authors.split(', ')
-    refname = authors[0].split(' ')[-1] + article.date[:4]
+    refname = authors[0].split(' ')[-1] + f'{article.date.year:d}'
     for i in range(len(authors)):
         if '.' not in authors[i]:
             authors[i] = '{' + authors[i] + '}'
@@ -37,7 +37,7 @@ def formatBibTeX(article):
     s +=f"    volume = {{{article.volume}}},\n"
     s +=f"    pages = {{{article.pages}}},\n"
     s +=f"    issue = {{{article.issue}}},\n"
-    s +=f"    year = {{{article.date[:4]}}},\n"
+    s +=f"    year = {{{article.date.year}}},\n"
     s +=f"    doi = {{{article.doi}}},\n"
     s +=f"    url = {{{article.url}}}\n"
     s += "}"

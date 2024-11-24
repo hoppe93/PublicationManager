@@ -10,10 +10,11 @@ import sys
 
 from db import Article, config, Database, Setting
 
+import getref
 from DialogArticle import DialogArticle
+from DialogExportText import DialogExportText
 from DialogSettings import DialogSettings
 from DialogTopCoauthors import DialogTopCoauthors
-from DialogExportText import DialogExportText
 
 
 class MainWindow(QtWidgets.QMainWindow):
@@ -40,6 +41,9 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.treeViewModel = QtGui.QStandardItemModel()
         self.ui.tvPublications.setModel(self.treeViewModel)
+
+        self.ui.lblTitle.setText('')
+        self.ui.lblAuthors.setText('')
 
         # Open/create database
         args = self.parseArgs()
@@ -73,7 +77,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ui.actionTopCoauthors.triggered.connect(DialogTopCoauthors.exe)
 
         self.ui.btnAddArticle.clicked.connect(self.addEditArticle)
+        self.ui.tvPublications.clicked.connect(self.articleSelected)
         self.ui.tvPublications.doubleClicked.connect(self.articleDoubleClicked)
+        self.ui.btnBibTeX.clicked.connect(self.exportBibTeX)
 
 
     def parseArgs(self):
@@ -148,6 +154,40 @@ class MainWindow(QtWidgets.QMainWindow):
             self.reloadPublications()
 
 
+    def articleSelected(self, modelIndex):
+        """
+        Signal triggered when an item in the tree view is clicked.
+        """
+        item = self.treeViewModel.itemFromIndex(modelIndex)
+
+        if item.data() is None:
+            self.ui.btnBibTeX.setEnabled(False)
+            return
+
+        a = Article.get(item.data())
+
+        self.ui.lblTitle.setText(a.title)
+
+        author = a.getFirstAuthor()
+        if ', ' in a.authors:
+            author += ' et al'
+        self.ui.lblAuthors.setText(author)
+
+        self.ui.lblJournal.setText(a.journal)
+        self.ui.lblVolume.setText(a.volume)
+        self.ui.lblIssue.setText(a.issue)
+        self.ui.lblYear.setText(f'{a.date.year:d}')
+
+        if a.doi:
+            self.ui.lblDOI.setText(f'<a href="https://doi.org/{a.doi}">{a.doi}</a>')
+        elif a.url:
+            self.ui.lblDOI.setText(f'<a href="{a.url}">Not Applicable</a>')
+        else:
+            self.ui.lblDOI.setText(f'n/a')
+
+        self.ui.btnBibTeX.setEnabled(True)
+
+
     def articleDoubleClicked(self, modelIndex):
         """
         Signal triggered when an item in the tree view is double clicked.
@@ -156,6 +196,20 @@ class MainWindow(QtWidgets.QMainWindow):
 
         if item.data() is not None:
             self.addEditArticle(item.data())
+
+
+    def exportBibTeX(self):
+        """
+        The "export BibTeX" button was clicked.
+        """
+        modelIndex = self.ui.tvPublications.selectedIndexes()[0]
+        item = self.treeViewModel.itemFromIndex(modelIndex)
+
+        if item.data() is not None:
+            article = Article.get(item.data())
+            cb = QtWidgets.QApplication.clipboard()
+            cb.clear(mode=cb.Clipboard)
+            cb.setText(getref.formatBibTeX(article), mode=cb.Clipboard)
 
 
 if __name__ == '__main__':

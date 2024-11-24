@@ -205,7 +205,7 @@ class Article(Base):
             dt = js['created']['date-parts'][0]
 
         dt = [f'{x:02d}' for x in dt]
-        a.date = '-'.join(dt)
+        a.date = datetime.fromisoformat('-'.join(dt))
 
         if 'published-print' in js:
             a.status = Article.STATUS_PUBLISHED
