@@ -2,7 +2,7 @@
 from PyQt5 import QtWidgets
 from PyQt5.QtWidgets import QMessageBox
 from ui import Article_design
-from datetime import date
+from datetime import date, datetime
 
 from db import Article, Setting
 
@@ -73,7 +73,10 @@ class DialogArticle(QtWidgets.QDialog):
         Load an article from its DOI.
         """
         if self.ui.tbDOI.text():
-            self.load(Article.fromDOI(self.ui.tbDOI.text()))
+            if 'arxiv.org' in self.ui.tbDOI.text():
+                self.load(Article.fromArXiv(self.ui.tbDOI.text()))
+            else:
+                self.load(Article.fromDOI(self.ui.tbDOI.text()))
 
 
     def getDate(self):
@@ -100,7 +103,7 @@ class DialogArticle(QtWidgets.QDialog):
         self.ui.tbTitle.setText(article.title)
         self.ui.tbAuthors.setPlainText(article.authors)
         self.ui.tbJournal.setText(article.journal)
-        if type(article.date) == date:
+        if type(article.date) == date or type(article.date) == datetime:
             self.ui.tbDate.setText(article.date.strftime('%Y-%m-%d'))
         else:
             self.ui.tbDate.setText(article.date)

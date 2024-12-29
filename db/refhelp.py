@@ -1,5 +1,23 @@
 
+import feedparser
 import requests
+
+
+def fromArXiv(arxiv_id):
+    """
+    Fetch article details from its arXiv ID (or URL).
+    """
+    if 'arxiv.org' in arxiv_id:
+        idx = arxiv_id.rfind('/')+1
+        arxiv_id = arxiv_id[idx:]
+
+    r = requests.get(f'https://export.arxiv.org/api/query?id_list={arxiv_id}')
+
+    if r.status_code == 200:
+        feed = feedparser.parse(r.text)
+        return feed.entries[0]
+    else:
+        raise Exception(f"Error when fetching arXiv. The server returned HTTP status code '{r.status_code}: {r.reason}'.")
 
 
 def fromDOI(doi):

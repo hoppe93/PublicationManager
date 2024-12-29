@@ -1,6 +1,5 @@
 
 import re
-import requests
 
 from datetime import datetime
 from sqlalchemy import Column, Date, Integer, String, or_
@@ -170,6 +169,42 @@ class Article(Base):
         result = db.exe(stmt, commit=True)
 
         return result
+
+
+    @staticmethod
+    def fromArXiv(arxiv_id):
+        """
+        Fetch article details from its arXiv ID (or URL).
+        """
+        entry = refhelp.fromArXiv(arxiv_id)
+
+        def ret(key, d=''):
+            if key in entry:
+                return entry[key]
+            else:
+                return d
+
+        a = Article()
+
+        aid = ret('id')
+        idx = aid.rfind('/')+1
+        a.doi = aid[idx:]
+        a.title = ret('title')
+        a.url = ret('id')
+        a.journal = 'arXiv preprint'
+        a.issue = ''
+        a.volume = ''
+        a.pages = ''
+        a.date = datetime.fromisoformat(ret('published'))
+        a.status = Article.STATUS_SUBMITTED
+
+        authors = []
+        for auth in entry.authors:
+            authors += [auth['name']]
+
+        a.authors = ', '.join(authors)
+
+        return a
 
 
     @staticmethod
