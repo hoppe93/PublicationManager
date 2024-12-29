@@ -90,6 +90,15 @@ class Article(Base):
 
 
     @staticmethod
+    def exists(doi):
+        """
+        Check if the article with the given DOI exists in the database.
+        """
+        a = Article.getByDOI(doi)
+        return (a is not None)
+
+
+    @staticmethod
     def get(id):
         """
         Returns the article with the given ID.
@@ -141,6 +150,15 @@ class Article(Base):
         """
         db = config.database()
         return db.exe(select(Article).where(Article.status==Article.STATUS_NON_REVIEWED).order_by(Article.date.desc())).scalars().all()
+
+
+    @staticmethod
+    def getByDOI(doi):
+        """
+        Return an article based on its DOI.
+        """
+        db = config.database()
+        return db.exe(select(Article).where(Article.doi==doi)).scalars().one_or_none()
 
 
     @staticmethod

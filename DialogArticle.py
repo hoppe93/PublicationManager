@@ -74,9 +74,15 @@ class DialogArticle(QtWidgets.QDialog):
         """
         if self.ui.tbDOI.text():
             if 'arxiv.org' in self.ui.tbDOI.text():
-                self.load(Article.fromArXiv(self.ui.tbDOI.text()))
+                a = Article.fromArXiv(self.ui.tbDOI.text())
             else:
-                self.load(Article.fromDOI(self.ui.tbDOI.text()))
+                a = Article.fromDOI(self.ui.tbDOI.text())
+
+            self.load(a)
+
+            # Check if this article already exists in the database
+            if Article.exists(doi=a.doi):
+                QMessageBox.warning(self, 'Duplicate article', 'This article already exists in the database.')
 
 
     def getDate(self):
