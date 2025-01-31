@@ -370,6 +370,7 @@ class Article(Base):
 
         years = []
         nart = 0
+        yr = None
         for p in published:
             if p.date.year not in years:
                 if yr is not None:
@@ -390,6 +391,7 @@ class Article(Base):
         years = []
         nart = 0
         nfirst_npr = 0
+        yr = None
         for p in npeerrvwd:
             if p.date.year not in years:
                 if yr is not None:
