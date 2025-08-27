@@ -3,6 +3,7 @@ from PyQt5 import QtWidgets
 from PyQt5.QtWidgets import QMessageBox
 from ui import Article_design
 from datetime import date, datetime
+import traceback
 
 from db import Article, Setting
 
@@ -73,10 +74,14 @@ class DialogArticle(QtWidgets.QDialog):
         Load an article from its DOI.
         """
         if self.ui.tbDOI.text():
-            if 'arxiv.org' in self.ui.tbDOI.text():
-                a = Article.fromArXiv(self.ui.tbDOI.text())
-            else:
-                a = Article.fromDOI(self.ui.tbDOI.text())
+            try:
+                if 'arxiv.org' in self.ui.tbDOI.text():
+                    a = Article.fromArXiv(self.ui.tbDOI.text())
+                else:
+                    a = Article.fromDOI(self.ui.tbDOI.text())
+            except Exception as ex:
+                QMessageBox.critical(self, 'Error importing article', f'{ex}\n\n{"".join(traceback.format_exception(ex))}')
+                return
 
             self.load(a)
 
