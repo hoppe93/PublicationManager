@@ -257,17 +257,22 @@ class Article(Base):
             dt = js['published-online']['date-parts'][0]
         elif 'created' in js:
             dt = js['created']['date-parts'][0]
-
-        dt = [f'{x:02d}' for x in dt]
-        ds = '-'.join(dt)
-        if re.match(r'[0-9]{4}-[0-9]{2}-[0-9]{2}$', ds):
-            a.date = datetime.fromisoformat(ds)
-        elif re.match(r'[0-9]{4}-[0-9]{2}$', ds):
-            a.date = datetime.fromisoformat(ds + '-01')
-        elif re.match(r'[0-9]{4}$', ds):
-            a.date = datetime(int(ds), 1, 1)
         else:
-            raise Exception(f"Unrecognized date format: '{ds}'.")
+            dt = None
+
+        if dt:
+            dt = [f'{x:02d}' for x in dt]
+            ds = '-'.join(dt)
+            if re.match(r'[0-9]{4}-[0-9]{2}-[0-9]{2}$', ds):
+                a.date = datetime.fromisoformat(ds)
+            elif re.match(r'[0-9]{4}-[0-9]{2}$', ds):
+                a.date = datetime.fromisoformat(ds + '-01')
+            elif re.match(r'[0-9]{4}$', ds):
+                a.date = datetime(int(ds), 1, 1)
+            else:
+                raise Exception(f"Unrecognized date format: '{ds}'.")
+        else:
+            a.date = datetime.now()
 
         if 'published-print' in js:
             a.status = Article.STATUS_PUBLISHED
