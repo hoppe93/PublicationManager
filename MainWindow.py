@@ -241,41 +241,46 @@ class MainWindow(QtWidgets.QMainWindow):
             self.ui.lblYear.setText(f'{p.date.year:d}')
 
             if p.doi:
-                self.ui.lblDOI.setText(f'<a href="https://doi.org/{p.doi}">{p.doi}</a>')
+                if 'arxiv.org' in p.url:
+                    self.ui.lblDOI.setText(f'<a href="{p.url}">{p.doi}</a>')
+                else:
+                    self.ui.lblDOI.setText(f'<a href="https://doi.org/{p.doi}">{p.doi}</a>')
             elif p.url:
                 self.ui.lblDOI.setText(f'<a href="{p.url}">Not Applicable</a>')
             else:
                 self.ui.lblDOI.setText('n/a')
 
             self.ui.btnBibTeX.setEnabled(False)
-            return
-
-        a = Article.get(item.data())
-        if a is None:
-            self.clearDetails()
-            self.ui.btnBibTeX.setEnabled(False)
-            return
-
-        self.ui.lblTitle.setText(a.title)
-
-        author = a.getFirstAuthor()
-        if ', ' in a.authors:
-            author += ' et al'
-        self.ui.lblAuthors.setText(author)
-
-        self.ui.lblJournal.setText(a.journal)
-        self.ui.lblVolume.setText(a.volume)
-        self.ui.lblIssue.setText(a.issue)
-        self.ui.lblYear.setText(f'{a.date.year:d}')
-
-        if a.doi:
-            self.ui.lblDOI.setText(f'<a href="https://doi.org/{a.doi}">{a.doi}</a>')
-        elif a.url:
-            self.ui.lblDOI.setText(f'<a href="{a.url}">Not Applicable</a>')
         else:
-            self.ui.lblDOI.setText(f'n/a')
+            a = Article.get(item.data())
+            if a is None:
+                self.clearDetails()
+                self.ui.btnBibTeX.setEnabled(False)
+                return
 
-        self.ui.btnBibTeX.setEnabled(True)
+            self.ui.lblTitle.setText(a.title)
+
+            author = a.getFirstAuthor()
+            if ', ' in a.authors:
+                author += ' et al'
+            self.ui.lblAuthors.setText(author)
+
+            self.ui.lblJournal.setText(a.journal)
+            self.ui.lblVolume.setText(a.volume)
+            self.ui.lblIssue.setText(a.issue)
+            self.ui.lblYear.setText(f'{a.date.year:d}')
+
+            if a.doi:
+                if 'arxiv.org' in a.url:
+                    self.ui.lblDOI.setText(f'<a href="{a.url}">{a.doi}</a>')
+                else:
+                    self.ui.lblDOI.setText(f'<a href="https://doi.org/{a.doi}">{a.doi}</a>')
+            elif a.url:
+                self.ui.lblDOI.setText(f'<a href="{a.url}">Not Applicable</a>')
+            else:
+                self.ui.lblDOI.setText(f'n/a')
+
+            self.ui.btnBibTeX.setEnabled(True)
 
 
     def articleDoubleClicked(self, modelIndex):
