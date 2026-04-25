@@ -338,8 +338,6 @@ class Article(Base):
             return itm
 
 
-        treeViewModel.clear()
-
         published = Article.getPublished()
         npublishd = Article.getNotPublished()
         npeerrvwd = Article.getNonPeerReviewed()

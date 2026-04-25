@@ -8,11 +8,12 @@ from ui import MainWindow_design
 from pathlib import Path
 import sys
 
-from db import Article, config, Database, Setting
+from db import Article, config, Database, Presentation, Setting
 
 import getref
 from DialogArticle import DialogArticle
 from DialogExportText import DialogExportText
+from DialogPresentation import DialogPresentation
 from DialogSettings import DialogSettings
 from DialogTopCoauthors import DialogTopCoauthors
 
@@ -31,6 +32,7 @@ class MainWindow(QtWidgets.QMainWindow):
         root = Path(__file__).parent.absolute()
 
         self.ui.btnAddArticle.setIcon(QtGui.QIcon(f'{root}/icons/add.png'))
+        self.ui.btnAddPresentation.setIcon(QtGui.QIcon(f'{root}/icons/add.png'))
         self.ui.btnExport.setIcon(QtGui.QIcon(f'{root}/icons/Printer.png'))
         self.ui.exportMenu = QtWidgets.QMenu()
         self.ui.actionExportText = self.ui.exportMenu.addAction('to text')
@@ -77,6 +79,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ui.actionTopCoauthors.triggered.connect(DialogTopCoauthors.exe)
 
         self.ui.btnAddArticle.clicked.connect(self.addEditArticle)
+        self.ui.btnAddPresentation.clicked.connect(self.addEditPresentation)
         self.ui.tvPublications.clicked.connect(self.articleSelected)
         self.ui.tvPublications.doubleClicked.connect(self.articleDoubleClicked)
         self.ui.btnBibTeX.clicked.connect(self.exportBibTeX)
@@ -114,12 +117,19 @@ class MainWindow(QtWidgets.QMainWindow):
         """
         Reload the publications view.
         """
+        self.treeViewModel.clear()
+
         stats = Article.loadPublicationsToTreeview(self.treeViewModel)
         self.ui.lblTotalPublications.setText(f"{stats['published']+stats['npublished']}")
         self.ui.lblFirstAuthor.setText(f"{stats['nfirst']}")
         self.ui.lblNRTotalPublications.setText(f"{stats['npeerreviewed']}")
         self.ui.lblNRFirstAuthor.setText(f"{stats['nfirst_nr']}")
         self.ui.lblInProgress.setText(f"{stats['npublished']}")
+
+        pstats = Presentation.loadPresentationsToTreeview(self.treeViewModel)
+        self.ui.lblPosters.setText(f"{pstats['poster']}")
+        self.ui.lblOral.setText(f"{pstats['oral']}")
+        self.ui.lblInvited.setText(f"{pstats['invited']}")
 
 
     def newDatabase(self):
@@ -154,6 +164,51 @@ class MainWindow(QtWidgets.QMainWindow):
             self.reloadPublications()
 
 
+    def addEditPresentation(self, id=None):
+        """
+        Add/edit a presentation.
+        """
+        presentation = None
+        if id is not None:
+            presentation = Presentation.get(id=id)
+
+        if DialogPresentation.exe(presentation):
+            self.reloadPublications()
+
+
+    def getItemType(self, item):
+        """
+        Determine the publication type represented by a tree view item.
+        """
+        rootitem = item
+        while rootitem.parent() is not None:
+            rootitem = rootitem.parent()
+
+        if rootitem.text() in ['Published', 'In preparation', 'Non-peer reviewed']:
+            return 'article'
+        elif rootitem.text().startswith(('Published (', 'In preparation (', 'Non-peer reviewed (')):
+            return 'article'
+        elif rootitem.text() in ['Oral presentations', 'Poster presentations', 'Invited presentations']:
+            return 'presentation'
+        elif rootitem.text().startswith(('Oral presentations (', 'Poster presentations (', 'Invited presentations (')):
+            return 'presentation'
+
+        return None
+
+
+    def clearDetails(self):
+        """
+        Clear the publication details panel.
+        """
+        self.ui.lblTitle.setText('')
+        self.ui.lblAuthors.setText('')
+        self.ui.lblJournal.setText('')
+        self.ui.lblVolume.setText('')
+        self.ui.lblIssue.setText('')
+        self.ui.lblYear.setText('')
+        self.ui.lblDOI.setText('')
+
+
     def articleSelected(self, modelIndex):
         """
         Signal triggered when an item in the tree view is clicked.
@@ -161,10 +216,45 @@ class MainWindow(QtWidgets.QMainWindow):
         item = self.treeViewModel.itemFromIndex(modelIndex)
 
         if item.data() is None:
+            self.clearDetails()
+            self.ui.btnBibTeX.setEnabled(False)
+            return
+
+        itemtype = self.getItemType(item)
+        if itemtype == 'presentation':
+            p = Presentation.get(item.data())
+            if p is None:
+                self.clearDetails()
+                self.ui.btnBibTeX.setEnabled(False)
+                return
+
+            self.ui.lblTitle.setText(p.title)
+
+            author = p.getFirstAuthor()
+            if ', ' in p.authors:
+                author += ' et al'
+            self.ui.lblAuthors.setText(author)
+
+            self.ui.lblJournal.setText(p.venue)
+            self.ui.lblVolume.setText('')
+            self.ui.lblIssue.setText('')
+            self.ui.lblYear.setText(f'{p.date.year:d}')
+
+            if p.doi:
+                self.ui.lblDOI.setText(f'<a href="https://doi.org/{p.doi}">{p.doi}</a>')
+            elif p.url:
+                self.ui.lblDOI.setText(f'<a href="{p.url}">Not Applicable</a>')
+            else:
+                self.ui.lblDOI.setText('n/a')
+
             self.ui.btnBibTeX.setEnabled(False)
             return
 
         a = Article.get(item.data())
+        if a is None:
+            self.clearDetails()
+            self.ui.btnBibTeX.setEnabled(False)
+            return
 
         self.ui.lblTitle.setText(a.title)
 
@@ -195,7 +285,10 @@ class MainWindow(QtWidgets.QMainWindow):
         item = self.treeViewModel.itemFromIndex(modelIndex)
 
         if item.data() is not None:
-            self.addEditArticle(item.data())
+            if self.getItemType(item) == 'presentation':
+                self.addEditPresentation(item.data())
+            else:
+                self.addEditArticle(item.data())
 
 
     def exportBibTeX(self):
@@ -206,10 +299,11 @@ class MainWindow(QtWidgets.QMainWindow):
         item = self.treeViewModel.itemFromIndex(modelIndex)
 
         if item.data() is not None:
-            article = Article.get(item.data())
-            cb = QtWidgets.QApplication.clipboard()
-            cb.clear(mode=cb.Clipboard)
-            cb.setText(getref.formatBibTeX(article), mode=cb.Clipboard)
+            if self.getItemType(item) == 'article':
+                article = Article.get(item.data())
+                cb = QtWidgets.QApplication.clipboard()
+                cb.clear(mode=cb.Clipboard)
+                cb.setText(getref.formatBibTeX(article), mode=cb.Clipboard)
 
 
 if __name__ == '__main__':
@@ -217,5 +311,4 @@ if __name__ == '__main__':
     window = MainWindow()
     window.show()
     sys.exit(app.exec_())
-
 
