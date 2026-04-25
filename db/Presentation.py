@@ -209,9 +209,9 @@ class Presentation(Base):
         return {
             'year': QtGui.QIcon(f'{root}/icons/year.png'),
             'category': QtGui.QIcon(f'{root}/icons/category.png'),
-            'article-blue': QtGui.QIcon(f'{root}/icons/article-blue.png'),
-            'article-green': QtGui.QIcon(f'{root}/icons/article-green.png'),
-            'article-red': QtGui.QIcon(f'{root}/icons/article-red.png')
+            'oral': QtGui.QIcon(f'{root}/icons/oral.png'),
+            'poster': QtGui.QIcon(f'{root}/icons/poster.png'),
+            'invited': QtGui.QIcon(f'{root}/icons/invited.png')
         }
 
 
@@ -271,9 +271,9 @@ class Presentation(Base):
         pos = addItem(root, f'Poster presentations ({len(poster)})', 'category')
         inv = addItem(root, f'Invited presentations ({len(invited)})', 'category')
 
-        addPresentations(ora, oral, 'article-blue')
-        addPresentations(pos, poster, 'article-green')
-        addPresentations(inv, invited, 'article-red')
+        addPresentations(ora, oral, 'oral')
+        addPresentations(pos, poster, 'poster')
+        addPresentations(inv, invited, 'invited')
 
         return {
             'oral': len(oral),
