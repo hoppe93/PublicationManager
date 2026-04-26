@@ -39,6 +39,7 @@ class DialogPresentation(QtWidgets.QDialog):
         """
         self.ui.pushButton.clicked.connect(self.fromDOI)
         self.ui.buttonBox.accepted.connect(self.validate)
+        self.ui.buttonBox.rejected.connect(self.reject)
 
 
     def commit(self, origpresentation):
@@ -143,3 +144,5 @@ class DialogPresentation(QtWidgets.QDialog):
             return d.commit(presentation)
         else:
             return False
+
+
